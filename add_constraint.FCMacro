@@ -1,0 +1,108 @@
+
+
+import sys
+import FreeCAD
+import Fem
+
+import ObjectsFEM
+
+doc = FreeCAD.ActiveDocument
+
+analysis = ObjectsFem.makeAnalysis(doc, "Analysis")
+
+solver_obj = ObjectsFem.makeSolverElmer(doc, "SolverElmer")
+solver_obj.CoordinateSystem = "Cartesian 3D"
+equation_flow = ObjectsFem.makeEquationFlow(doc, solver_obj)
+equation_flow.IdrsParameter = 3
+equation_flow.LinearIterativeMethod = "Idrs"
+equation_flow.LinearPreconditioning = "ILU1"
+equation_flow.Variable = "Flow Solution[Velocity:2 Pressure:1]"
+
+
+# fluid
+material_obj = ObjectsFem.makeMaterialFluid(doc, "air_material")
+mat = material_obj.Material
+mat["Name"] = "Air"
+mat["Density"] = "1.204 kg/m^3"
+mat["DynamicViscosity"] = "1.80e-5 kg/m/s"
+mat["KinematicViscosity"] = "1.511e-5 m^2/s"
+mat["ThermalConductivity"] = "0.02587 W/m/K"
+mat["ThermalExpansionCoefficient"] = "3.43e-3 1/K"
+mat["SpecificHeat"] = "1.01 kJ/kg/K"
+mat["ElectricalConductivity"] = "1e-12 S/m"
+mat["RelativePermeability"] = "1.0"
+mat["RelativePermittivity"] = "1.00059"
+material_obj.Material = mat
+
+part = FreeCAD.ActiveDocument.getObject("Pocket")
+material_obj.References = [(part, "Solid1")]
+analysis.addObject(material_obj)
+
+
+# constraint inlet velocity
+FlowVelocity_Inlet = ObjectsFem.makeConstraintFlowVelocity(doc, "FlowVelocity_Inlet")
+FlowVelocity_Inlet.References = [(part, "Face1")]
+FlowVelocity_Inlet.VelocityXFormula = (
+    'Variable Coordinate 2; Real MATC "10*(tx+50e-3)*(50e-3-tx)"'
+)
+FlowVelocity_Inlet.VelocityXUnspecified = False
+FlowVelocity_Inlet.VelocityXHasFormula = True
+FlowVelocity_Inlet.VelocityYUnspecified = False
+analysis.addObject(FlowVelocity_Inlet)
+
+face_indices0 = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29]
+
+faces = [(part, f"Face{i}") for i in face_indices0]
+Flow_wall = ObjectsFem.makeConstraintFlowVelocity(doc, "Flow_wall")
+Flow_wall.References = faces
+Flow_wall.VelocityXFormula = (
+    'Variable Coordinate 2; Real MATC "10*(tx+50e-3)*(50e-3-tx)"'
+)
+Flow_wall.VelocityXUnspecified = False
+Flow_wall.VelocityXHasFormula = True
+Flow_wall.VelocityYUnspecified = False
+analysis.addObject(Flow_wall)
+
+
+
+def get_faces():
+    res = []
+    # Replace with your actual object name
+    part = FreeCAD.ActiveDocument.getObject("Pocket")
+    # Loop through all faces
+    for i, face in enumerate(part.Shape.Faces):
+        print(f"Face{i+1}: Area = {face.Area}, Type = {face.Surface.__class__.__name__}")
+        res.append([f"Face{i+1}",face.Area,face.Surface.__class__.__name__, face])
+    return res 
+
+
+
+
+# Assume you already have an FEM mesh and analysis setup
+
+# Select the object (e.g., a solid part)
+# part = doc.getObject("Pocket")  # Replace with your actual part name
+
+# Create a fixed constraint
+
+def new_constraint():
+    fixed_constraint = doc.addObject("Fem::ConstraintFixed", "ConstraintFixed")
+
+    for face in get_faces():
+        fixed_constraint.References = [(part,face[0] )]
+    analysis = doc.getObject("Analysis")
+    analysis.Member.append(fixed_constraint)
+
+# fixed_constraint = doc.addObject("Fem::ConstraintFixed", "cf9")
+# for face in get_faces():
+#         fixed_constraint.References = [(part,face[0] )]
+
+def vel0():
+    face_indices = [0, 1, 4, 5]
+    # constraint = doc.addObject("Fem::ConstraintVelocity", "vel0")
+    flow_vel_constraint = doc.addObject("Fem::ConstraintUser", "FlowVelocityConstraint")
+    refs = [(part, f"Face{i+1}") for i in face_indices]
+    constraint.References = refs
+    analysis = doc.getObject("Analysis")
+    analysis.Member.append(constraint)
+    doc.recompute()

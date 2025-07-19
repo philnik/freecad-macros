@@ -1,0 +1,50 @@
+
+
+
+
+
+
+
+
+
+
+
+
+import FreeCAD as App
+import FreeCADGui as Gui
+import Part
+import math
+
+# Create a new document or get the active one
+doc = App.newDocument("Impeller") if App.ActiveDocument is None else App.ActiveDocument
+
+# Parameters
+hub_radius = 10           # Radius of the hub (center)
+hub_height = 10           # Height of the hub
+blade_height = 15         # Height of each blade
+blade_thickness = 2       # Thickness of the blades
+outer_radius = 30         # Outer radius of the impeller
+num_blades = 6            # Number of blades
+blade_twist = 20          # Degrees of twist for blades
+blade_length = outer_radius - hub_radius  # Blade length
+
+# Create the hub (central cylinder)
+hub = Part.makeCylinder(hub_radius, hub_height)
+
+# Create blades
+blades = []
+angle_step = 360 / num_blades  # Angle increment per blade
+
+for i in range(num_blades):
+    # Define blade
+    blade = Part.makeBox(blade_thickness, blade_length, blade_height)
+
+    # Move blade to start from hub edge
+    blade.translate(App.Vector(-blade_thickness / 2, hub_radius, 0))
+
+    # Rotate blade around Z-axis to its correct position
+    blade.rotate(App.Vector(0, 0, 0), App.Vector(0, 0, 1), i * angle_step)
+
+    # Twist blade slightly (optional)
+    if blade_twist != 0:
+        blade = blade.tran

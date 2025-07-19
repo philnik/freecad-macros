@@ -1,0 +1,17 @@
+# -*- coding: utf-8 -*-
+
+# Macro Begin: C:\Users\filip\AppData\Roaming\FreeCAD\Macro\place_dace.FCMacro +++++++++++++++++++++++++++++++++++++++++++++++++
+import FreeCAD
+
+# Gui.runCommand('Std_DlgMacroRecord',0)
+# Gui.Selection.addSelection('Unnamed2','ConstraintFlowVelocity001')
+for amesh in App.activeDocument().Objects:
+    if "" == amesh.Name:
+        amesh.ViewObject.Visibility = True
+    elif "Mesh" in amesh.TypeId:
+        amesh.ViewObject.Visibility = False
+
+# Gui.Selection.addSelection('Unnamed2','Body','Pocket.Face28')
+# Gui.Selection.addSelection('Unnamed2','Body','Pocket.Face29',46.8504,-16.8402,30)
+# Gui.Selection.addSelection('Unnamed2','Body','Pocket.Face28',46.8944,-8.73797,-30)
+# Macro End: C:\Users\filip\AppData\Roaming\FreeCAD\Macro\place_dace.FCMacro +++++++++++++++++++++++++++++++++++++++++++++++++

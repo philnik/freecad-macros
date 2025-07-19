@@ -1,0 +1,16 @@
+import FreeCADGui
+
+# Get the active selection
+sel = FreeCADGui.Selection.getSelectionEx()
+if len(sel) == 1 and len(sel[0].SubObjects) == 1:
+    face = sel[0].SubObjects[0]
+    if face.ShapeType == 'Face':
+        # Clear current selection
+        FreeCADGui.Selection.clearSelection()
+        # Add all edges of the face
+        for edge in face.Edges:
+            FreeCADGui.Selection.addSelection(sel[0].Object, edge)
+    else:
+        print("Please select a single face.")
+else:
+    print("Please select exactly one face.")

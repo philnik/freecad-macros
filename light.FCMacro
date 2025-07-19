@@ -1,0 +1,15 @@
+from pivy.coin import SoDirectionalLight, SoLightModel, SoSceneManager
+
+# Get the active view
+view = Gui.ActiveDocument.ActiveView
+
+# Access the Coin3D scene graph
+sg = view.getSceneGraph()
+
+# Create a brighter light
+light = SoDirectionalLight()
+light.intensity = 0.5  # Increase to 2.0 or more if needed
+light.direction.setValue(0, -1, -1)
+
+# Add the light to the scene
+sg.insertChild(light, 0)

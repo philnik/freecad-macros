@@ -1,0 +1,95 @@
+import FreeCAD as App
+import Part
+from FreeCAD import Vector
+
+# === PARAMETERS ===
+length = 800  # mm
+width = 600   # mm
+height = 500  # mm
+profile_size = 60
+panel_thickness = 4
+
+doc = App.newDocument("Aluminum_Box_Corrected")
+
+def add_profile(pos, direction, length_val, name):
+    """
+    Create a 60x60 profile at a given position, direction, and length.
+    """
+    box = Part.makeBox(length_val, profile_size, profile_size)
+    if direction == "x":
+        box.translate(pos)
+    elif direction == "y":
+        box = box.rotate(Vector(0,0,0), Vector(0,0,1), 90)
+        box.translate(pos)
+    elif direction == "z":
+        box = box.rotate(Vector(0,0,0), Vector(0,1,0), 90)
+        box.translate(pos)
+    else:
+        raise ValueError("Direction must be 'x', 'y', or 'z'")
+    obj = doc.addObject("Part::Feature", name)
+    obj.Shape = box
+    return obj
+
+# === FRAME: 12 PROFILES ===
+
+# Bottom Rectangle (4)
+add_profile(Vector(0, 0, 0), "x", length, "Bottom_X1")
+add_profile(Vector(0, width - profile_size, 0), "x", length, "Bottom_X2")
+add_profile(Vector(0, 0, 0), "y", width, "Bottom_Y1")
+add_profile(Vector(length - profile_size, 0, 0), "y", width, "Bottom_Y2")
+
+# Top Rectangle (4)
+add_profile(Vector(0, 0, height - profile_size), "x", length, "Top_X1")
+add_profile(Vector(0, width - profile_size, height - profile_size), "x", length, "Top_X2")
+add_profile(Vector(0, 0, height - profile_size), "y", width, "Top_Y1")
+add_profile(Vector(length - profile_size, 0, height - profile_size), "y", width, "Top_Y2")
+
+# Vertical Columns (4)
+add_profile(Vector(0, 0, 0), "z", height, "Z1")
+add_profile(Vector(length - profile_size, 0, 0), "z", height, "Z2")
+add_profile(Vector(0, width - profile_size, 0), "z", height, "Z3")
+add_profile(Vector(length - profile_size, width - profile_size, 0), "z", height, "Z4")
+
+# === PANELS (adjusted to fit inside profiles) ===
+
+p_len = length - 2 * profile_size
+p_wid = width - 2 * profile_size
+p_hei = height - 2 * profile_size
+
+# Bottom Panel
+panel = Part.makeBox(p_len, p_wid, panel_thickness)
+panel.translate(Vector(profile_size, profile_size, 0))
+obj = doc.addObject("Part::Feature", "Bottom_Panel")
+obj.Shape = panel
+
+# Top Panel
+panel = Part.makeBox(p_len, p_wid, panel_thickness)
+panel.translate(Vector(profile_size, profile_size, height - panel_thickness))
+obj = doc.addObject("Part::Feature", "Top_Panel")
+obj.Shape = panel
+
+# Front Panel
+panel = Part.makeBox(p_len, panel_thickness, p_hei)
+panel.translate(Vector(profile_size, 0, profile_size))
+obj = doc.addObject("Part::Feature", "Front_Panel")
+obj.Shape = panel
+
+# Back Panel
+panel = Part.makeBox(p_len, panel_thickness, p_hei)
+panel.translate(Vector(profile_size, width - panel_thickness, profile_size))
+obj = doc.addObject("Part::Feature", "Back_Panel")
+obj.Shape = panel
+
+# Left Panel
+panel = Part.makeBox(panel_thickness, p_wid, p_hei)
+panel.translate(Vector(0, profile_size, profile_size))
+obj = doc.addObject("Part::Feature", "Left_Panel")
+obj.Shape = panel
+
+# Right Panel
+panel = Part.makeBox(panel_thickness, p_wid, p_hei)
+panel.translate(Vector(length - panel_thickness, profile_size, profile_size))
+obj = doc.addObject("Part::Feature", "Right_Panel")
+obj.Shape = panel
+
+doc.recompute()
