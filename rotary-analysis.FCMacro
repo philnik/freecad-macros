@@ -1,0 +1,84 @@
+import sys
+import FreeCAD
+import Fem
+
+import ObjectsFem
+import Import
+
+step_file= "C:/Users/filip/AppData/Roaming/draw/fem/fem-cylinder2/rotary_body.step"
+
+doc = App.newDocument("MyNewDoc")
+doc = FreeCAD.ActiveDocument
+
+Import.insert(step_file, doc.Name)
+
+analysis = ObjectsFem.makeAnalysis(doc, "new_analysis")
+
+fw1 = ObjectsFem.makeConstraintFlowVelocity(doc, "fw1")
+fw2 = ObjectsFem.makeConstraintFlowVelocity(doc, "fw2")
+fw3 = ObjectsFem.makeConstraintFlowVelocity(doc, "fw3")
+fw4 = ObjectsFem.makeConstraintFlowVelocity(doc, "fw4")
+
+solver_obj = ObjectsFem.makeSolverElmer(doc, "SolverElmer")
+solver_obj.CoordinateSystem = "Cartesian 2D"
+analysis.addObject(solver_obj)
+
+
+# solver settings
+equation_flow = ObjectsFem.makeEquationFlow(doc, solver_obj)
+equation_flow.IdrsParameter = 3
+equation_flow.LinearIterativeMethod = "Idrs"
+equation_flow.LinearPreconditioning = "ILU1"
+equation_flow.Variable = "Flow Solution[Velocity:2 Pressure:1]"
+
+
+# fluid
+material_obj = ObjectsFem.makeMaterialFluid(doc, "air_material")
+mat = material_obj.Material
+mat["Name"] = "Air"
+mat["Density"] = "1.204 kg/m^3"
+mat["DynamicViscosity"] = "1.80e-5 kg/m/s"
+mat["KinematicViscosity"] = "1.511e-5 m^2/s"
+mat["ThermalConductivity"] = "0.02587 W/m/K"
+mat["ThermalExpansionCoefficient"] = "3.43e-3 1/K"
+mat["SpecificHeat"] = "1.01 kJ/kg/K"
+mat["ElectricalConductivity"] = "1e-12 S/m"
+mat["RelativePermeability"] = "1.0"
+mat["RelativePermittivity"] = "1.00059"
+material_obj.Material = mat
+
+
+part = FreeCAD.ActiveDocument.getObject("Compound")
+
+
+
+
+def get_faces(name="Compound"):
+    res = []
+    # Replace with your actual object name
+    part = FreeCAD.ActiveDocument.getObject(name)
+    # Loop through all faces
+    for i, face in enumerate(part.Shape.Faces):
+        print(f"Face{i+1}: Area = {face.Area}, Type = {face.Surface.__class__.__name__}")
+        res.append([f"Face{i+1}",face.Area,face.Surface.__class__.__name__, face])
+    return res 
+
+
+
+def get_edges_from_face(name="Face1"):
+    res = []
+    # Replace with your actual object name
+    part = FreeCAD.ActiveDocument.getObject(name)
+    # Loop through all faces
+    for i, edge in enumerate(part.Shape.Edges):
+        print(f"Edge{i+1}: Length = {face.Length}")
+        res.append([f"Edge{i+1}",Edge])
+    return res 
+
+
+
+doc.recompute
+
+f = get_faces()
+
+e = get_edges_from_face()
